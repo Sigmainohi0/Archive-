@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Archive — Historical Photo & Video Repository</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap');
+[data-theme="dark"]{--bg:#0e0f11;--surface:#15171a;--surface2:#1c1f23;--surface3:#23272d;--border:#2c3038;--border2:#383e48;--text:#edeef0;--text2:#8a919e;--text3:#4e5562;--accent:#b59a5a;--accent-h:#cdb470;--accent2:#c0392b;--shadow:0 4px 24px rgba(0,0,0,.55);--shadow-hover:0 8px 32px rgba(0,0,0,.75)}
+[data-theme="light"]{--bg:#f4f2ee;--surface:#fff;--surface2:#f9f8f5;--surface3:#eeecea;--border:#dedad4;--border2:#c8c3ba;--text:#1a1a1a;--text2:#555050;--text3:#999490;--accent:#8c6d2f;--accent-h:#6e5220;--accent2:#b03020;--shadow:0 2px 16px rgba(0,0,0,.08);--shadow-hover:0 6px 24px rgba(0,0,0,.14)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Inter,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .2s,color .2s}
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:200;background:var(--surface);border-bottom:1px solid var(--border)}
+.topbar-inner{max-width:1440px;margin:0 auto;padding:0 24px;height:56px;display:flex;align-items:center;gap:16px}
+.logo{font-family:'Libre Baskerville',serif;font-weight:700;font-size:17px;color:var(--text);white-space:nowrap;flex-shrink:0}
+.logo span{color:var(--accent)}
+.search-wrap{flex:1;max-width:420px;position:relative}
+.search-wrap input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 12px 7px 36px;border-radius:4px;font-size:13px;font-family:Inter,sans-serif;outline:none;transition:border-color .15s}
+.search-wrap input::placeholder{color:var(--text3)}
+.search-wrap input:focus{border-color:var(--accent)}
+.s-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;pointer-events:none}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.theme-toggle{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:6px 9px;cursor:pointer;font-size:14px;line-height:1;transition:background .15s}
+.theme-toggle:hover{background:var(--surface3)}
+/* sync status */
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background .3s}
+.sync-dot.synced{background:#4ade80}
+.sync-dot.syncing{background:var(--accent);animation:pulse 1s infinite}
+.sync-dot.error{background:var(--accent2)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sync-label{font-size:11px;color:var(--text3)}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:4px;font-size:11px;font-weight:600;font-family:Inter,sans-serif;cursor:pointer;border:none;letter-spacing:.05em;text-transform:uppercase;transition:background .15s;white-space:nowrap}
+.btn-accent{background:var(--accent);color:#0e0f11}
+.btn-accent:hover{background:var(--accent-h)}
+.btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--surface3);color:var(--text)}
+.btn-danger{background:rgba(192,57,43,.1);color:var(--accent2);border:1px solid rgba(192,57,43,.25)}
+.btn-danger:hover{background:rgba(192,57,43,.2)}
+.btn-sm{padding:5px 11px}
+.layout{max-width:1440px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 56px)}
+/* SIDEBAR */
+.sidebar{border-right:1px solid var(--border);padding:20px 0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.sidebar-label{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);padding:0 18px 8px}
+.sidebar-section{margin-bottom:24px}
+.person-item{display:flex;align-items:center;justify-content:space-between;padding:8px 18px;cursor:pointer;border-left:3px solid transparent;gap:8px;transition:background .1s}
+.person-item:hover{background:var(--surface2)}
+.person-item.active{background:var(--surface2);border-left-color:var(--accent)}
+.person-item-name{font-size:13px;font-weight:500;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.person-item.active .person-item-name{color:var(--accent)}
+.person-count{font-size:10px;color:var(--text3);background:var(--surface3);padding:2px 6px;border-radius:20px;flex-shrink:0}
+.album-list{border-left:1px solid var(--border);margin:2px 0 6px 30px}
+.album-item{display:flex;align-items:center;padding:6px 12px;cursor:pointer;gap:6px;transition:background .1s;border-radius:0 4px 4px 0}
+.album-item:hover{background:var(--surface2)}
+.album-item.active{background:var(--surface2)}
+.album-item-name{font-size:12px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.album-item.active .album-item-name{color:var(--accent);font-weight:600}
+.album-item-count{font-size:10px;color:var(--text3);flex-shrink:0}
+.album-del-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:0 2px;opacity:0;transition:opacity .1s,color .1s;flex-shrink:0;line-height:1}
+.album-item:hover .album-del-btn{opacity:1}
+.album-del-btn:hover{color:var(--accent2)}
+.sidebar-add-btn{width:calc(100% - 36px);margin:0 18px;display:flex;align-items:center;justify-content:center;gap:5px;padding:7px;border:1px dashed var(--border2);border-radius:4px;cursor:pointer;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);background:none;transition:border-color .15s,color .15s;font-family:Inter,sans-serif}
+.sidebar-add-btn:hover{border-color:var(--accent);color:var(--accent)}
+/* CONTENT */
+.content{padding:24px 28px 80px;min-width:0}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);margin-bottom:16px}
+.bc-person{color:var(--text2);cursor:pointer}
+.bc-person:hover{color:var(--accent)}
+.bc-album{color:var(--accent);font-weight:600}
+.subject-hero{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:4px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.hero-eyebrow{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.hero-name{font-family:'Libre Baskerville',serif;font-size:clamp(20px,2.5vw,30px);font-weight:700;line-height:1.1;margin-bottom:3px}
+.hero-dates{font-size:12px;color:var(--text3);margin-bottom:10px}
+.hero-desc{font-size:13px;line-height:1.7;color:var(--text2);max-width:580px}
+.hero-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+.stat-pill{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:8px 14px;text-align:center;min-width:80px}
+.stat-num{font-family:'Libre Baskerville',serif;font-size:22px;font-weight:700;color:var(--accent);line-height:1}
+.stat-label{font-size:9px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.08em}
+/* ALBUM TABS */
+.album-tabs-bar{display:flex;align-items:center;border-bottom:2px solid var(--border);margin-bottom:20px;overflow-x:auto;scrollbar-width:none}
+.album-tabs-bar::-webkit-scrollbar{display:none}
+.album-tab{padding:9px 18px;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;letter-spacing:.03em;transition:color .15s,border-color .15s;background:none;border-top:none;border-left:none;border-right:none;font-family:Inter,sans-serif}
+.album-tab:hover{color:var(--text2)}
+.album-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.add-tab-btn{padding:9px 14px;font-size:18px;color:var(--text3);cursor:pointer;background:none;border:none;transition:color .15s;margin-left:4px;line-height:1}
+.add-tab-btn:hover{color:var(--accent)}
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.toolbar-left{flex:1;display:flex;gap:10px;align-items:center}
+.toolbar-right{display:flex;gap:6px}
+/* filter tabs */
+.filter-tabs{display:flex;gap:4px}
+.filter-tab{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface2);color:var(--text3);transition:all .12s;font-family:Inter,sans-serif}
+.filter-tab.active{background:var(--accent);border-color:var(--accent);color:#0e0f11}
+.view-toggle{display:flex;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px}
+.view-btn{padding:4px 8px;border-radius:3px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--text3);transition:background .12s,color .12s}
+.view-btn.active{background:var(--surface);color:var(--text)}
+/* UPLOAD ZONE */
+.upload-zone{border:2px dashed var(--border2);border-radius:4px;padding:28px;text-align:center;cursor:pointer;transition:all .15s;margin-bottom:20px;background:var(--surface)}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--accent);background:rgba(181,154,90,.03)}
+.uz-icon{font-size:24px;margin-bottom:6px;opacity:.4}
+.uz-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:3px}
+.uz-sub{font-size:11px;color:var(--text3)}
+/* GRID */
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.photo-grid.list-view{grid-template-columns:1fr;gap:8px}
+.photo-card{background:var(--surface);border:1px solid var(--border);border-radius:4px;overflow:hidden;cursor:pointer;transition:box-shadow .2s,transform .15s,border-color .15s}
+.photo-card:hover{box-shadow:var(--shadow-hover);transform:translateY(-2px);border-color:var(--border2)}
+/* image cards */
+.card-img{aspect-ratio:4/3;overflow:hidden;background:var(--surface3);position:relative}
+.card-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.photo-card:hover .card-img img{transform:scale(1.04)}
+/* video cards */
+.card-vid{aspect-ratio:4/3;overflow:hidden;background:#000;position:relative}
+.card-vid video{width:100%;height:100%;object-fit:cover;display:block}
+.play-badge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:46px;height:46px;background:rgba(0,0,0,.6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;pointer-events:none;backdrop-filter:blur(4px);transition:background .15s}
+.photo-card:hover .play-badge{background:rgba(181,154,90,.85)}
+.media-badge{position:absolute;top:7px;right:7px;background:rgba(0,0,0,.7);color:#fff;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 6px;border-radius:3px;backdrop-filter:blur(4px)}
+/* overlay */
+.card-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.65) 0%,transparent 55%);opacity:0;transition:opacity .2s;display:flex;align-items:flex-end;padding:8px;gap:5px}
+.photo-card:hover .card-overlay{opacity:1}
+.ov-btn{padding:4px 9px;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:Inter,sans-serif}
+.ov-edit{background:rgba(255,255,255,.15);color:#fff;backdrop-filter:blur(4px)}
+.ov-edit:hover{background:rgba(255,255,255,.25)}
+.ov-del{background:rgba(192,57,43,.3);color:#ff9999;backdrop-filter:blur(4px)}
+.ov-del:hover{background:rgba(192,57,43,.5)}
+.card-body{padding:10px 12px 12px}
+.card-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-desc{font-size:11px;color:var(--text2);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px}
+.card-foot{display:flex;justify-content:space-between;align-items:center}
+.card-date{font-size:10px;color:var(--text3)}
+.card-albadge{font-size:9px;color:var(--accent);background:rgba(181,154,90,.1);padding:1px 6px;border-radius:10px;border:1px solid rgba(181,154,90,.2)}
+/* list view */
+.photo-grid.list-view .photo-card{display:flex}
+.photo-grid.list-view .card-img,.photo-grid.list-view .card-vid{aspect-ratio:unset;width:120px;flex-shrink:0}
+.photo-grid.list-view .card-body{flex:1;padding:14px 16px;display:flex;flex-direction:column;gap:3px}
+.photo-grid.list-view .card-title{white-space:normal;font-size:13px}
+.photo-grid.list-view .card-desc{-webkit-line-clamp:3}
+/* empty */
+.empty-state{grid-column:1/-1;text-align:center;padding:70px 20px}
+.empty-icon{font-size:40px;opacity:.15;margin-bottom:10px}
+.empty-title{font-size:15px;font-weight:600;color:var(--text2);margin-bottom:5px}
+.empty-sub{font-size:12px;color:var(--text3)}
+/* UPLOAD PROGRESS */
+.upload-progress-bar{height:3px;background:var(--surface3);border-radius:2px;overflow:hidden;margin-bottom:8px;display:none}
+.upload-progress-bar.show{display:block}
+.upload-progress-fill{height:100%;background:var(--accent);width:0%;transition:width .2s}
+/* LIGHTBOX */
+.lb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:500;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)}
+.lb-overlay.open{display:flex}
+.lb-inner{background:var(--surface);border:1px solid var(--border);border-radius:4px;display:grid;grid-template-columns:1fr 320px;width:100%;max-width:1000px;max-height:92vh;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.7)}
+.lb-media-pane{background:#000;display:flex;align-items:center;justify-content:center;min-height:400px;overflow:hidden}
+.lb-media-pane img{max-width:100%;max-height:80vh;object-fit:contain;display:block}
+.lb-media-pane video{max-width:100%;max-height:80vh;display:block;outline:none}
+.lb-side{border-left:1px solid var(--border);padding:24px 20px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.lb-close{position:absolute;top:14px;right:18px;background:rgba(255,255,255,.1);border:none;border-radius:4px;color:#fff;font-size:16px;cursor:pointer;padding:5px 9px;line-height:1;z-index:10}
+.lb-close:hover{background:rgba(255,255,255,.2)}
+.lb-sec-title{font-family:'Libre Baskerville',serif;font-size:14px;font-weight:700;color:var(--text);border-bottom:1px solid var(--border);padding-bottom:10px}
+.lbf label{display:block;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+.lbf input,.lbf textarea,.lbf select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:7px 10px;font-family:Inter,sans-serif;font-size:12px;color:var(--text);outline:none;transition:border-color .15s}
+.lbf textarea{resize:vertical;min-height:70px}
+.lbf select option,.mf select option{background:var(--surface2)}
+.lbf input:focus,.lbf textarea:focus,.lbf select:focus{border-color:var(--accent)}
+.lbf input::placeholder,.lbf textarea::placeholder{color:var(--text3)}
+.lb-actions{display:flex;gap:7px;margin-top:auto;flex-wrap:wrap}
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:28px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.modal-title{font-family:'Libre Baskerville',serif;font-size:18px;font-weight:700;margin-bottom:20px;color:var(--text)}
+.mf{margin-bottom:14px}
+.mf label{display:block;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+.mf input,.mf textarea,.mf select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:9px 12px;font-family:Inter,sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color .15s}
+.mf textarea{resize:vertical;min-height:80px}
+.mf input:focus,.mf textarea:focus,.mf select:focus{border-color:var(--accent)}
+.mf input::placeholder,.mf textarea::placeholder{color:var(--text3)}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.divider{display:flex;align-items:center;gap:10px;color:var(--text3);font-size:11px;margin:4px 0 12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.new-alb-row{display:flex;gap:8px;align-items:center}
+.new-alb-row input{flex:1}
+/* toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 20px;font-size:13px;color:var(--text);box-shadow:var(--shadow);opacity:0;transition:opacity .25s,transform .25s;z-index:999;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+@media(max-width:860px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{position:static;height:auto;border-right:none;border-bottom:1px solid var(--border);padding:12px 0;display:flex;overflow-x:auto}
+  .sidebar-section{margin-bottom:0;display:flex;align-items:center;white-space:nowrap;padding:0 8px}
+  .sidebar-label{display:none}
+  .person-item{padding:5px 12px;border-left:none;border:1px solid var(--border);border-radius:20px;margin:0 3px}
+  .person-item.active{border-color:var(--accent)}
+  .album-list{display:none}
+  .sidebar-add-btn{width:auto;margin:0 6px;border-radius:20px;padding:5px 14px}
+  .lb-inner{grid-template-columns:1fr}
+  .lb-side{border-left:none;border-top:1px solid var(--border)}
+  .subject-hero{flex-direction:column}
+  .hero-right{flex-direction:row;align-items:center}
+  .content{padding:16px 16px 60px}
+}
+@media(max-width:540px){.photo-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="logo">The <span>Archive</span></div>
+    <div class="search-wrap">
+      <span class="s-icon">🔍</span>
+      <input type="text" id="global-search" placeholder="Search photos & videos…">
+    </div>
+    <div class="topbar-right">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div class="sync-dot" id="sync-dot"></div>
+        <span class="sync-label" id="sync-label">connecting…</span>
+      </div>
+      <button class="theme-toggle" id="theme-toggle">🌙</button>
+      <button class="btn btn-ghost btn-sm" id="share-btn">🔗 Share</button>
+      <button class="btn btn-accent" id="top-upload-btn">↑ Add Media</button>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">People</div>
+      <div id="person-list"></div>
+      <button class="sidebar-add-btn" id="sidebar-add-person">＋ New Person</button>
+    </div>
+  </aside>
+  <div class="content" id="content"></div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lb-overlay" id="lightbox">
+  <button class="lb-close" id="lb-close">✕</button>
+  <div class="lb-inner">
+    <div class="lb-media-pane" id="lb-media-pane"></div>
+    <div class="lb-side">
+      <div class="lb-sec-title">Media Details</div>
+      <div class="lbf"><label>Title</label><input type="text" id="lb-title" placeholder="Title…"></div>
+      <div class="lbf"><label>Description</label><textarea id="lb-desc" placeholder="Context, notes…"></textarea></div>
+      <div class="lbf"><label>Date / Year</label><input type="text" id="lb-year" placeholder="e.g. May 25, 2020"></div>
+      <div class="lbf"><label>Source</label><input type="text" id="lb-source" placeholder="e.g. AP Photo, CNN…"></div>
+      <div class="lbf"><label>Move to Album</label><select id="lb-album"></select></div>
+      <div class="lb-actions">
+        <button class="btn btn-accent" id="lb-save">Save</button>
+        <button class="btn btn-danger btn-sm" id="lb-delete">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div class="modal-overlay" id="modal-upload">
+  <div class="modal">
+    <div class="modal-title" id="upload-modal-title">Add Media</div>
+    <div class="upload-zone" id="modal-upload-zone" style="margin-bottom:16px;">
+      <div class="uz-icon">📁</div>
+      <div class="uz-title">Drop photos & videos or <span style="color:var(--accent);cursor:pointer">browse files</span></div>
+      <div class="uz-sub">JPG · PNG · GIF · WebP · MP4 · MOV · WebM · AVI</div>
+    </div>
+    <div class="upload-progress-bar" id="upload-progress-bar"><div class="upload-progress-fill" id="upload-progress-fill"></div></div>
+    <div id="upload-file-list" style="font-size:12px;color:var(--text3);margin-bottom:12px;min-height:16px;"></div>
+    <div class="mf"><label>Add to Album</label><select id="upload-album-select"></select></div>
+    <div class="divider">or create a new album</div>
+    <div class="mf">
+      <div class="new-alb-row">
+        <input type="text" id="upload-new-album" placeholder="New album name (e.g. With Family)">
+        <button class="btn btn-ghost" id="upload-create-album-btn" style="flex-shrink:0;">Create</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="upload-cancel">Cancel</button>
+      <button class="btn btn-accent" id="upload-confirm">Upload</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW PERSON -->
+<div class="modal-overlay" id="modal-new-person">
+  <div class="modal">
+    <div class="modal-title">Add New Person</div>
+    <div class="mf"><label>Name *</label><input type="text" id="np-name" placeholder="e.g. Malcolm X"></div>
+    <div class="mf"><label>Dates / Lifespan</label><input type="text" id="np-dates" placeholder="e.g. 1925–1965"></div>
+    <div class="mf"><label>Description</label><textarea id="np-desc" placeholder="Brief bio or archive context…"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="np-cancel">Cancel</button>
+      <button class="btn btn-accent" id="np-create">Create Archive</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT PERSON -->
+<div class="modal-overlay" id="modal-edit-person">
+  <div class="modal">
+    <div class="modal-title">Edit Person</div>
+    <div class="mf"><label>Name</label><input type="text" id="ep-name"></div>
+    <div class="mf"><label>Dates / Lifespan</label><input type="text" id="ep-dates"></div>
+    <div class="mf"><label>Description</label><textarea id="ep-desc"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="ep-cancel">Cancel</button>
+      <button class="btn btn-accent" id="ep-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW ALBUM -->
+<div class="modal-overlay" id="modal-new-album">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-title">New Album</div>
+    <div class="mf"><label>Album Name *</label><input type="text" id="na-name" placeholder="e.g. Being Arrested, With Family…"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="na-cancel">Cancel</button>
+      <button class="btn btn-accent" id="na-create">Create Album</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<input type="file" id="file-input" accept="image/*,video/*" multiple style="display:none">
+
+<script>
+<script>
+var SB_URL = 'https://vjedrigxcimshohvazgx.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqZWRyaWd4Y2ltc2hvaHZhemd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3MDE3NDQsImV4cCI6MjA5ODI3Nzc0NH0.CBXiORvA_hJ6Hi4pA5LLBewnMXxqQWLL45U2q3JsjBE';
+var BUCKET = 'media';
+var META_KEY = 'archive-meta.json';
+var LOCAL_KEY = 'archive_v6';
+var state = {};
+var lbMediaId = null, lbPersonId = null, pendingFiles = [];
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function fmtDate(ts) { return ts ? new Date(ts).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : ''; }
+function isVideo(url) { return url && (/\.(mp4|mov|webm|avi|mkv|m4v)/i.test(url) || url.indexOf('data:video') === 0); }
+function person(id) { for(var i=0;i<state.people.length;i++){if(state.people[i].id===id)return state.people[i];} return null; }
+function alb(pid,aid) { var p=person(pid); if(!p)return null; for(var i=0;i<p.albums.length;i++){if(p.albums[i].id===aid)return p.albums[i];} return null; }
+function activePerson() { return person(state.activePersonId); }
+function albCount(p,aid) { var c=0; for(var i=0;i<p.photos.length;i++){if(p.photos[i].albumId===aid)c++;} return c; }
+function activePerson() { return person(state.activePersonId); }
+
+function showToast(msg, dur) {
+  dur = dur || 2800;
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show';
+  setTimeout(function(){ t.className = 'toast'; }, dur);
+}
+function setSyncStatus(st, label) {
+  document.getElementById('sync-dot').className = 'sync-dot ' + st;
+  document.getElementById('sync-label').textContent = label;
+}
+
+function defaultData() {
+  return {
+    theme:'dark', activePersonId:'george-floyd', activeAlbumId:'all', view:'grid', mediaFilter:'all',
+    people:[
+      {id:'george-floyd',name:'George Floyd',dates:'1973\u20132020',
+       desc:'George Perry Floyd Jr. was an African American man whose death during an arrest in Minneapolis on May 25, 2020 sparked a global movement for racial justice.',
+       albums:[{id:'gf-activities',name:'Activities & Daily Life'},{id:'gf-family',name:'With Family'},{id:'gf-community',name:'Community & Friends'},{id:'gf-arrest',name:'The Arrest'},{id:'gf-memorial',name:'Memorial & Tributes'}],photos:[]},
+      {id:'derek-chauvin',name:'Derek Chauvin',dates:'b. 1976',
+       desc:'Derek Michael Chauvin is a former Minneapolis police officer convicted of the murder of George Floyd. This archive documents his career, trial, and sentencing.',
+       albums:[{id:'dc-career',name:'Police Career'},{id:'dc-trial',name:'The Trial'},{id:'dc-sentencing',name:'Sentencing'},{id:'dc-aftermath',name:'Aftermath'}],photos:[]},
+      {id:'adolf-hitler',name:'Adolf Hitler',dates:'1889\u20131945',
+       desc:'Adolf Hitler was the leader of Nazi Germany from 1933 to 1945, responsible for World War II and the Holocaust. Preserved for educational and research purposes.',
+       albums:[{id:'ah-early',name:'Early Life'},{id:'ah-rise',name:'Rise to Power'},{id:'ah-wartime',name:'Wartime'},{id:'ah-private',name:'Private Life'},{id:'ah-downfall',name:'The Downfall'}],photos:[]}
+    ]
+  };
+}
+
+function loadLocal() {
+  try { var r=localStorage.getItem(LOCAL_KEY); if(r) return JSON.parse(r); } catch(e) {}
+  return null;
+}
+function saveLocal() {
+  try { localStorage.setItem(LOCAL_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function loadFromCloud() {
+  setSyncStatus('syncing','syncing...');
+  var url = SB_URL + '/storage/v1/object/public/' + BUCKET + '/' + META_KEY + '?t=' + Date.now();
+  return fetch(url).then(function(res) {
+    if (res.ok) return res.json();
+    return null;
+  }).then(function(data) {
+    if (!data) return false;
+    state = data;
+    for (var i=0;i<state.people.length;i++) {
+      if (!state.people[i].albums) state.people[i].albums = [];
+      if (!state.people[i].photos) state.people[i].photos = [];
+    }
+    setSyncStatus('synced','synced');
+    saveLocal();
+    return true;
+  }).catch(function() { return false; });
+}
+
+function saveToCloud() {
+  setSyncStatus('syncing','saving...');
+  saveLocal();
+  var blob = new Blob([JSON.stringify(state)], {type:'application/json'});
+  var headers = {'Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY,'Content-Type':'application/json','x-upsert':'true'};
+  return fetch(SB_URL+'/storage/v1/object/'+BUCKET+'/'+META_KEY, {method:'PUT',headers:headers,body:blob})
+    .then(function(res) {
+      if (res.ok) { setSyncStatus('synced','saved \u2713'); return true; }
+      return fetch(SB_URL+'/storage/v1/object/'+BUCKET+'/'+META_KEY, {method:'POST',headers:headers,body:new Blob([JSON.stringify(state)],{type:'application/json'})});
+    })
+    .then(function(res) {
+      if (res && res.ok !== undefined && !res.ok) { setSyncStatus('error','save failed'); }
+      return true;
+    })
+    .catch(function() { setSyncStatus('error','offline'); return false; });
+}
+
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', state.theme || 'dark');
+  document.getElementById('theme-toggle').textContent = (state.theme === 'dark') ? '\u2600\uFE0F' : '\uD83C\uDF19';
+}
+
+// SIDEBAR
+function renderSidebar() {
+  var list = document.getElementById('person-list');
+  var html = '';
+  for (var i=0; i<state.people.length; i++) {
+    var p = state.people[i];
+    var isActive = p.id === state.activePersonId;
+    html += '<div class="person-item' + (isActive?' active':'') + '" data-pid="'+p.id+'">';
+    html += '<span class="person-item-name">'+p.name+'</span>';
+    html += '<span class="person-count">'+p.photos.length+'</span>';
+    html += '</div>';
+    if (isActive) {
+      html += '<div class="album-list">';
+      html += '<div class="album-item'+(state.activeAlbumId==='all'?' active':'')+'" data-album="all" data-person="'+p.id+'">';
+      html += '<span class="album-item-name">All Media</span><span class="album-item-count">'+p.photos.length+'</span></div>';
+      for (var j=0; j<p.albums.length; j++) {
+        var a = p.albums[j];
+        html += '<div class="album-item'+(state.activeAlbumId===a.id?' active':'')+'" data-album="'+a.id+'" data-person="'+p.id+'">';
+        html += '<span class="album-item-name">'+a.name+'</span>';
+        html += '<span class="album-item-count">'+albCount(p,a.id)+'</span>';
+        html += '<button class="album-del-btn" data-da="'+a.id+'" data-dp="'+p.id+'">\u00d7</button>';
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+  }
+  list.innerHTML = html;
+
+  var pItems = list.querySelectorAll('[data-pid]');
+  for (var k=0; k<pItems.length; k++) {
+    pItems[k].addEventListener('click', (function(pid) {
+      return function() {
+        state.activePersonId = pid; state.activeAlbumId = 'all'; state.mediaFilter = 'all';
+        document.getElementById('global-search').value = '';
+        renderSidebar(); renderContent();
+      };
+    })(pItems[k].getAttribute('data-pid')));
+  }
+  var aItems = list.querySelectorAll('[data-album]');
+  for (var m=0; m<aItems.length; m++) {
+    aItems[m].addEventListener('click', (function(aid) {
+      return function(e) { e.stopPropagation(); state.activeAlbumId = aid; renderSidebar(); renderContent(); };
+    })(aItems[m].getAttribute('data-album')));
+  }
+  var dItems = list.querySelectorAll('[data-da]');
+  for (var n=0; n<dItems.length; n++) {
+    dItems[n].addEventListener('click', (function(da,dp) {
+      return function(e) { e.stopPropagation(); deleteAlbum(dp,da); };
+    })(dItems[n].getAttribute('data-da'), dItems[n].getAttribute('data-dp')));
+  }
+}
+
+// CONTENT
+function renderContent() {
+  var p = activePerson();
+  var content = document.getElementById('content');
+  if (!p) { content.innerHTML = '<div style="padding:40px;color:var(--text3)">Select a person.</div>'; return; }
+  var sv = document.getElementById('global-search').value.toLowerCase();
+  var aid = state.activeAlbumId;
+  var mf = state.mediaFilter || 'all';
+  var media = [];
+  for (var i=0; i<p.photos.length; i++) {
+    var m = p.photos[i];
+    if (aid !== 'all' && m.albumId !== aid) continue;
+    if (mf === 'photos' && isVideo(m.url)) continue;
+    if (mf === 'videos' && !isVideo(m.url)) continue;
+    if (sv) {
+      var txt = (m.title||'') + ' ' + (m.desc||'') + ' ' + (m.year||'') + ' ' + (m.source||'');
+      if (txt.toLowerCase().indexOf(sv) === -1) continue;
+    }
+    media.push(m);
+  }
+  var albObj = alb(p.id, aid);
+  var albName = aid === 'all' ? 'All Media' : (albObj ? albObj.name : 'Album');
+  var view = state.view || 'grid';
+  var photoCount = 0, videoCount = 0;
+  for (var j=0; j<p.photos.length; j++) { if (isVideo(p.photos[j].url)) videoCount++; else photoCount++; }
+
+  var html = '';
+  html += '<div class="breadcrumb"><span class="bc-person" id="bc-p">'+p.name+'</span><span style="opacity:.4"> &rsaquo; </span><span class="bc-album">'+albName+'</span></div>';
+  html += '<div class="subject-hero"><div>';
+  html += '<div class="hero-eyebrow">Archive Subject</div>';
+  html += '<div class="hero-name">'+p.name+'</div>';
+  html += '<div class="hero-dates">'+(p.dates||'')+'</div>';
+  html += '<div class="hero-desc">'+(p.desc||'<span style="color:var(--text3);font-style:italic">No description yet.</span>')+'</div>';
+  html += '</div><div class="hero-right">';
+  html += '<div style="display:flex;gap:8px;">';
+  html += '<div class="stat-pill"><div class="stat-num">'+photoCount+'</div><div class="stat-label">Photos</div></div>';
+  html += '<div class="stat-pill"><div class="stat-num">'+videoCount+'</div><div class="stat-label">Videos</div></div>';
+  html += '</div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">';
+  html += '<button class="btn btn-ghost btn-sm" id="edit-person-btn">\u270f\ufe0f Edit</button>';
+  if (state.people.length > 1) html += '<button class="btn btn-danger btn-sm" id="del-person-btn">Remove</button>';
+  html += '</div></div></div>';
+
+  // album tabs
+  html += '<div class="album-tabs-bar">';
+  html += '<button class="album-tab'+(aid==='all'?' active':'')+'" data-tab="all">All Media ('+p.photos.length+')</button>';
+  for (var t=0; t<p.albums.length; t++) {
+    var al = p.albums[t];
+    html += '<button class="album-tab'+(aid===al.id?' active':'')+'" data-tab="'+al.id+'">'+al.name+' ('+albCount(p,al.id)+')</button>';
+  }
+  html += '<button class="add-tab-btn" id="add-alb-tab">&#xFF0B;</button>';
+  html += '</div>';
+
+  // upload zone
+  html += '<div class="upload-zone" id="upload-zone">';
+  html += '<div class="uz-icon">&#128193;</div>';
+  html += '<div class="uz-title">Drop photos &amp; videos or <span style="color:var(--accent)">browse files</span></div>';
+  html += '<div class="uz-sub">Adding to: <strong style="color:var(--text2)">'+albName+'</strong> &middot; Photos &amp; Videos supported</div>';
+  html += '</div>';
+
+  // toolbar
+  html += '<div class="toolbar"><div class="toolbar-left">';
+  html += '<div class="filter-tabs">';
+  html += '<button class="filter-tab'+(mf==='all'?' active':'')+'" data-mf="all">All</button>';
+  html += '<button class="filter-tab'+(mf==='photos'?' active':'')+'" data-mf="photos">&#128247; Photos</button>';
+  html += '<button class="filter-tab'+(mf==='videos'?' active':'')+'" data-mf="videos">&#127916; Videos</button>';
+  html += '</div>';
+  html += '<span style="font-size:12px;color:var(--text3)">'+media.length+' item'+(media.length!==1?'s':'')+'</span>';
+  html += '</div><div class="toolbar-right"><div class="view-toggle">';
+  html += '<button class="view-btn'+(view==='grid'?' active':'')+'" data-view="grid">&#8862;</button>';
+  html += '<button class="view-btn'+(view==='list'?' active':'')+'" data-view="list">&#9776;</button>';
+  html += '</div></div></div>';
+
+  // grid
+  html += '<div class="photo-grid'+(view==='list'?' list-view':'')+'" id="photo-grid">';
+  if (media.length === 0) {
+    html += '<div class="empty-state"><div class="empty-icon">'+(mf==='videos'?'&#127916;':'&#128247;')+'</div>';
+    html += '<div class="empty-title">'+(sv?'No results match':'Nothing here yet')+'</div>';
+    html += '<div class="empty-sub">'+(sv?'Try a different search':'Upload photos or videos above')+'</div></div>';
+  } else {
+    for (var r=0; r<media.length; r++) { html += cardHTML(media[r], p); }
+  }
+  html += '</div>';
+  content.innerHTML = html;
+
+  // wire events
+  document.getElementById('bc-p').onclick = function() { state.activeAlbumId='all'; renderSidebar(); renderContent(); };
+  var tabs = document.querySelectorAll('[data-tab]');
+  for (var ti=0; ti<tabs.length; ti++) {
+    tabs[ti].addEventListener('click', (function(tab){ return function(){ state.activeAlbumId=tab; renderSidebar(); renderContent(); }; })(tabs[ti].getAttribute('data-tab')));
+  }
+  document.getElementById('add-alb-tab').onclick = openNewAlbumModal;
+  var mfBtns = document.querySelectorAll('[data-mf]');
+  for (var mi=0; mi<mfBtns.length; mi++) {
+    mfBtns[mi].addEventListener('click', (function(mfv){ return function(){ state.mediaFilter=mfv; renderContent(); }; })(mfBtns[mi].getAttribute('data-mf')));
+  }
+  var uz = document.getElementById('upload-zone');
+  uz.onclick = function() { openUploadModal(state.activeAlbumId); };
+  uz.ondragover = function(e){ e.preventDefault(); uz.classList.add('drag'); };
+  uz.ondragleave = function(){ uz.classList.remove('drag'); };
+  uz.ondrop = function(e){ e.preventDefault(); uz.classList.remove('drag'); openUploadModalWithFiles(e.dataTransfer.files, state.activeAlbumId); };
+
+  var epBtn = document.getElementById('edit-person-btn');
+  if (epBtn) epBtn.onclick = function(){ openEditPerson(p); };
+  var dpBtn = document.getElementById('del-person-btn');
+  if (dpBtn) dpBtn.onclick = function(){ deletePerson(p.id); };
+
+  var vBtns = document.querySelectorAll('[data-view]');
+  for (var vi=0; vi<vBtns.length; vi++) {
+    vBtns[vi].addEventListener('click', (function(v){ return function(){ state.view=v; renderContent(); }; })(vBtns[vi].getAttribute('data-view')));
+  }
+  var cmBtns = document.querySelectorAll('[data-cm]');
+  for (var ci=0; ci<cmBtns.length; ci++) {
+    cmBtns[ci].addEventListener('click', (function(id,pid){ return function(){ openLightbox(id,pid); }; })(cmBtns[ci].getAttribute('data-cm'), p.id));
+  }
+  var emBtns = document.querySelectorAll('[data-em]');
+  for (var ei=0; ei<emBtns.length; ei++) {
+    emBtns[ei].addEventListener('click', (function(id,pid){ return function(e){ e.stopPropagation(); openLightbox(id,pid); }; })(emBtns[ei].getAttribute('data-em'), p.id));
+  }
+  var dmBtns = document.querySelectorAll('[data-dm]');
+  for (var di=0; di<dmBtns.length; di++) {
+    dmBtns[di].addEventListener('click', (function(id,pid){ return function(e){ e.stopPropagation(); deleteMedia(id,pid); }; })(dmBtns[di].getAttribute('data-dm'), p.id));
+  }
+}
+
+function cardHTML(m, p) {
+  var vid = isVideo(m.url);
+  var albObj = alb(p.id, m.albumId);
+  var an = albObj ? albObj.name : '';
+  var html = '<div class="photo-card" data-cm="'+m.id+'">';
+  if (vid) {
+    html += '<div class="card-vid" data-cm="'+m.id+'">';
+    html += '<video src="'+m.url+'" preload="metadata" muted playsinline></video>';
+    html += '<div class="play-badge">&#9654;</div>';
+    html += '<div class="media-badge">VIDEO</div>';
+    html += '<div class="card-overlay"><button class="ov-btn ov-edit" data-em="'+m.id+'">\u270f\ufe0f Edit</button><button class="ov-btn ov-del" data-dm="'+m.id+'">\uD83D\uDDD1 Delete</button></div>';
+    html += '</div>';
+  } else {
+    html += '<div class="card-img" data-cm="'+m.id+'">';
+    html += '<img src="'+m.url+'" alt="'+(m.title||'')+'">';
+    html += '<div class="card-overlay"><button class="ov-btn ov-edit" data-em="'+m.id+'">\u270f\ufe0f Edit</button><button class="ov-btn ov-del" data-dm="'+m.id+'">\uD83D\uDDD1 Delete</button></div>';
+    html += '</div>';
+  }
+  html += '<div class="card-body">';
+  html += '<div class="card-title">'+(m.title||'Untitled')+'</div>';
+  if (m.desc) html += '<div class="card-desc">'+m.desc+'</div>';
+  html += '<div class="card-foot"><span class="card-date">'+(m.year||fmtDate(m.added))+'</span>';
+  if (an && state.activeAlbumId === 'all') html += '<span class="card-albadge">'+an+'</span>';
+  html += '</div></div></div>';
+  return html;
+}
+
+// UPLOAD
+function buildAlbSel(selId, defId) {
+  var p = activePerson();
+  var sel = document.getElementById(selId);
+  var html = '<option value="uncategorized">\u2014 Uncategorized \u2014</option>';
+  for (var i=0; i<p.albums.length; i++) {
+    html += '<option value="'+p.albums[i].id+'"'+(p.albums[i].id===defId?' selected':'')+'>'+p.albums[i].name+'</option>';
+  }
+  sel.innerHTML = html;
+  if (defId && defId !== 'all') sel.value = defId;
+}
+
+function openUploadModal(defAlbId) {
+  pendingFiles = [];
+  document.getElementById('upload-modal-title').textContent = 'Add Media \u2014 ' + activePerson().name;
+  document.getElementById('upload-new-album').value = '';
+  document.getElementById('upload-file-list').textContent = '';
+  document.getElementById('upload-progress-bar').className = 'upload-progress-bar';
+  document.getElementById('upload-progress-fill').style.width = '0%';
+  buildAlbSel('upload-album-select', defAlbId);
+  document.getElementById('modal-upload').className = 'modal-overlay open';
+}
+function openUploadModalWithFiles(files, defAlbId) {
+  openUploadModal(defAlbId);
+  pendingFiles = [];
+  for (var i=0; i<files.length; i++) {
+    if (files[i].type.indexOf('image/') === 0 || files[i].type.indexOf('video/') === 0) pendingFiles.push(files[i]);
+  }
+  updateFL();
+}
+function updateFL() {
+  var el = document.getElementById('upload-file-list');
+  if (!pendingFiles.length) { el.textContent = ''; return; }
+  var imgs=0, vids=0;
+  for (var i=0; i<pendingFiles.length; i++) { if(pendingFiles[i].type.indexOf('image/')===0) imgs++; else vids++; }
+  var parts = [];
+  if (imgs) parts.push(imgs + ' photo' + (imgs!==1?'s':''));
+  if (vids) parts.push(vids + ' video' + (vids!==1?'s':''));
+  el.textContent = 'Ready: ' + parts.join(' + ');
+}
+
+var mz = document.getElementById('modal-upload-zone');
+mz.onclick = function(){ document.getElementById('file-input').click(); };
+mz.ondragover = function(e){ e.preventDefault(); mz.classList.add('drag'); };
+mz.ondragleave = function(){ mz.classList.remove('drag'); };
+mz.ondrop = function(e){
+  e.preventDefault(); mz.classList.remove('drag');
+  pendingFiles = [];
+  for (var i=0; i<e.dataTransfer.files.length; i++) {
+    var f = e.dataTransfer.files[i];
+    if (f.type.indexOf('image/')===0 || f.type.indexOf('video/')===0) pendingFiles.push(f);
+  }
+  updateFL();
+};
+
+document.getElementById('upload-create-album-btn').onclick = function() {
+  var name = document.getElementById('upload-new-album').value.trim(); if (!name) return;
+  var p = activePerson(); var na = {id:'alb-'+uid(), name:name}; p.albums.push(na);
+  document.getElementById('upload-new-album').value = '';
+  buildAlbSel('upload-album-select', na.id); renderSidebar();
+};
+document.getElementById('upload-cancel').onclick = function() {
+  document.getElementById('modal-upload').className = 'modal-overlay'; pendingFiles = [];
+};
+document.getElementById('upload-confirm').onclick = function() {
+  if (!pendingFiles.length) { mz.click(); return; }
+  var albumId = document.getElementById('upload-album-select').value;
+  processFiles(pendingFiles, state.activePersonId, albumId);
+  document.getElementById('modal-upload').className = 'modal-overlay'; pendingFiles = [];
+};
+document.getElementById('top-upload-btn').onclick = function() { openUploadModal(state.activeAlbumId); };
+document.getElementById('file-input').onchange = function(e) {
+  var files = [];
+  for (var i=0; i<e.target.files.length; i++) {
+    var f = e.target.files[i];
+    if (f.type.indexOf('image/')===0 || f.type.indexOf('video/')===0) files.push(f);
+  }
+  e.target.value = '';
+  if (document.getElementById('modal-upload').className.indexOf('open') !== -1) {
+    pendingFiles = files; updateFL();
+  } else {
+    var aid = state.activeAlbumId === 'all' ? 'uncategorized' : state.activeAlbumId;
+    openUploadModalWithFiles(files, aid);
+  }
+};
+
+function processFiles(files, personId, albumId) {
+  var p = person(personId); if (!p || !files.length) return;
+  document.getElementById('upload-progress-bar').className = 'upload-progress-bar show';
+  document.getElementById('upload-progress-fill').style.width = '0%';
+  showToast('Uploading ' + files.length + ' file' + (files.length!==1?'s':'') + '...', 10000);
+  var total = files.length, done = 0;
+
+  function finalize(url, f) {
+    p.photos.unshift({id:uid(), url:url, albumId:albumId||'uncategorized', title:'', desc:'', year:'', source:'', added:Date.now(), type:f.type.indexOf('video/')===0?'video':'photo'});
+    done++;
+    document.getElementById('upload-progress-fill').style.width = Math.round((done/total)*100) + '%';
+    if (done === total) {
+      saveToCloud().then(function() {
+        document.getElementById('upload-progress-bar').className = 'upload-progress-bar';
+        showToast('\u2713 ' + done + ' file' + (done!==1?'s':'') + ' uploaded');
+        renderSidebar(); renderContent();
+      });
+    }
+  }
+
+  function readLocal(f) {
+    var r = new FileReader();
+    r.onload = function(e) { finalize(e.target.result, f); };
+    r.readAsDataURL(f);
+  }
+
+  for (var i=0; i<files.length; i++) {
+    (function(f) {
+      var ext = f.name.split('.').pop();
+      var path = personId + '/' + uid() + '.' + ext;
+      var headers = {'Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY,'Content-Type':f.type,'x-upsert':'true'};
+      fetch(SB_URL+'/storage/v1/object/'+BUCKET+'/'+path, {method:'POST',headers:headers,body:f})
+        .then(function(res) {
+          if (res.ok) { finalize(SB_URL+'/storage/v1/object/public/'+BUCKET+'/'+path, f); }
+          else { readLocal(f); }
+        }).catch(function() { readLocal(f); });
+    })(files[i]);
+  }
+}
+
+// LIGHTBOX
+function openLightbox(mediaId, personId) {
+  var p = person(personId);
+  var m = null;
+  for (var i=0; i<p.photos.length; i++) { if (p.photos[i].id === mediaId) { m = p.photos[i]; break; } }
+  if (!m) return;
+  lbMediaId = mediaId; lbPersonId = personId;
+  var pane = document.getElementById('lb-media-pane');
+  if (isVideo(m.url)) {
+    pane.innerHTML = '<video src="'+m.url+'" controls autoplay style="max-width:100%;max-height:80vh;display:block;outline:none"></video>';
+  } else {
+    pane.innerHTML = '<img src="'+m.url+'" alt="'+(m.title||'')+'" style="max-width:100%;max-height:80vh;object-fit:contain;display:block">';
+  }
+  document.getElementById('lb-title').value = m.title || '';
+  document.getElementById('lb-desc').value = m.desc || '';
+  document.getElementById('lb-year').value = m.year || '';
+  document.getElementById('lb-source').value = m.source || '';
+  var sel = document.getElementById('lb-album');
+  var shtml = '<option value="uncategorized">\u2014 Uncategorized \u2014</option>';
+  for (var j=0; j<p.albums.length; j++) {
+    shtml += '<option value="'+p.albums[j].id+'"'+(p.albums[j].id===m.albumId?' selected':'')+'>'+p.albums[j].name+'</option>';
+  }
+  sel.innerHTML = shtml;
+  if (m.albumId) sel.value = m.albumId;
+  document.getElementById('lightbox').className = 'lb-overlay open';
+}
+function closeLightbox() {
+  var vid = document.querySelector('#lb-media-pane video');
+  if (vid) { vid.pause(); vid.src = ''; }
+  document.getElementById('lightbox').className = 'lb-overlay';
+  lbMediaId = null;
+}
+document.getElementById('lb-close').onclick = closeLightbox;
+document.getElementById('lightbox').onclick = function(e) { if (e.target === document.getElementById('lightbox')) closeLightbox(); };
+document.getElementById('lb-save').onclick = function() {
+  if (!lbMediaId) return;
+  var p = person(lbPersonId);
+  for (var i=0; i<p.photos.length; i++) {
+    if (p.photos[i].id === lbMediaId) {
+      p.photos[i].title = document.getElementById('lb-title').value;
+      p.photos[i].desc = document.getElementById('lb-desc').value;
+      p.photos[i].year = document.getElementById('lb-year').value;
+      p.photos[i].source = document.getElementById('lb-source').value;
+      p.photos[i].albumId = document.getElementById('lb-album').value;
+      break;
+    }
+  }
+  closeLightbox();
+  saveToCloud().then(function() { renderSidebar(); renderContent(); });
+};
+document.getElementById('lb-delete').onclick = function() {
+  if (!lbMediaId) return;
+  var id = lbMediaId, pid = lbPersonId;
+  closeLightbox();
+  deleteMedia(id, pid);
+};
+
+function deleteMedia(id, personId) {
+  var p = person(personId);
+  for (var i=0; i<p.photos.length; i++) {
+    if (p.photos[i].id === id) {
+      var m = p.photos[i];
+      if (m.url && m.url.indexOf(SB_URL) === 0) {
+        var parts = m.url.split('/object/public/'+BUCKET+'/');
+        if (parts.length > 1) {
+          fetch(SB_URL+'/storage/v1/object/'+BUCKET+'/'+parts[1], {method:'DELETE',headers:{'Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY}}).catch(function(){});
+        }
+      }
+      p.photos.splice(i,1);
+      break;
+    }
+  }
+  saveToCloud().then(function() { renderSidebar(); renderContent(); showToast('Deleted'); });
+}
+
+// PERSON CRUD
+document.getElementById('sidebar-add-person').onclick = function() {
+  document.getElementById('np-name').value = '';
+  document.getElementById('np-dates').value = '';
+  document.getElementById('np-desc').value = '';
+  document.getElementById('modal-new-person').className = 'modal-overlay open';
+};
+document.getElementById('np-cancel').onclick = function() { document.getElementById('modal-new-person').className = 'modal-overlay'; };
+document.getElementById('np-create').onclick = function() {
+  var name = document.getElementById('np-name').value.trim();
+  if (!name) { document.getElementById('np-name').focus(); return; }
+  var id = name.toLowerCase().replace(/[^a-z0-9]+/g,'-') + '-' + uid().slice(0,4);
+  state.people.push({id:id, name:name, dates:document.getElementById('np-dates').value.trim(), desc:document.getElementById('np-desc').value.trim(), albums:[], photos:[]});
+  state.activePersonId = id; state.activeAlbumId = 'all';
+  document.getElementById('modal-new-person').className = 'modal-overlay';
+  saveToCloud().then(function() { renderSidebar(); renderContent(); });
+};
+
+function openEditPerson(p) {
+  document.getElementById('ep-name').value = p.name;
+  document.getElementById('ep-dates').value = p.dates || '';
+  document.getElementById('ep-desc').value = p.desc || '';
+  document.getElementById('modal-edit-person').className = 'modal-overlay open';
+}
+document.getElementById('ep-cancel').onclick = function() { document.getElementById('modal-edit-person').className = 'modal-overlay'; };
+document.getElementById('ep-save').onclick = function() {
+  var p = activePerson();
+  p.name = document.getElementById('ep-name').value.trim() || p.name;
+  p.dates = document.getElementById('ep-dates').value.trim();
+  p.desc = document.getElementById('ep-desc').value.trim();
+  document.getElementById('modal-edit-person').className = 'modal-overlay';
+  saveToCloud().then(function() { renderSidebar(); renderContent(); });
+};
+
+function deletePerson(id) {
+  if (!confirm('Remove this person and all their media?')) return;
+  var newPeople = [];
+  for (var i=0; i<state.people.length; i++) { if (state.people[i].id !== id) newPeople.push(state.people[i]); }
+  state.people = newPeople;
+  state.activePersonId = state.people.length ? state.people[0].id : '';
+  state.activeAlbumId = 'all';
+  saveToCloud().then(function() { renderSidebar(); renderContent(); });
+}
+
+// ALBUM CRUD
+function openNewAlbumModal() {
+  document.getElementById('na-name').value = '';
+  document.getElementById('modal-new-album').className = 'modal-overlay open';
+  setTimeout(function(){ document.getElementById('na-name').focus(); }, 50);
+}
+document.getElementById('na-cancel').onclick = function() { document.getElementById('modal-new-album').className = 'modal-overlay'; };
+document.getElementById('na-create').onclick = function() {
+  var name = document.getElementById('na-name').value.trim();
+  if (!name) { document.getElementById('na-name').focus(); return; }
+  var p = activePerson(); var na = {id:'alb-'+uid(), name:name}; p.albums.push(na);
+  state.activeAlbumId = na.id;
+  document.getElementById('modal-new-album').className = 'modal-overlay';
+  saveToCloud().then(function() { renderSidebar(); renderContent(); });
+};
+document.getElementById('na-name').onkeydown = function(e) { if (e.keyCode === 13) document.getElementById('na-create').click(); };
+
+function deleteAlbum(pid, aid) {
+  if (!confirm('Remove this album? Media will become Uncategorized.')) return;
+  var p = person(pid);
+  var newAlbs = [];
+  for (var i=0; i<p.albums.length; i++) { if (p.albums[i].id !== aid) newAlbs.push(p.albums[i]); }
+  p.albums = newAlbs;
+  for (var j=0; j<p.photos.length; j++) { if (p.photos[j].albumId === aid) p.photos[j].albumId = 'uncategorized'; }
+  if (state.activeAlbumId === aid) state.activeAlbumId = 'all';
+  saveToCloud().then(function() { renderSidebar(); renderContent(); });
+}
+
+// SHARE
+document.getElementById('share-btn').onclick = function() {
+  var url = window.location.href;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(function() { showToast('\uD83D\uDD17 Link copied! Share this URL with friends.', 4000); });
+  } else {
+    prompt('Copy this link:', url);
+  }
+};
+
+// THEME
+document.getElementById('theme-toggle').onclick = function() {
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  applyTheme(); saveToCloud();
+};
+
+// SEARCH
+document.getElementById('global-search').oninput = function() { renderContent(); };
+
+// INIT
+function init() {
+  var local = loadLocal();
+  if (local) {
+    state = local;
+    for (var i=0; i<state.people.length; i++) {
+      if (!state.people[i].albums) state.people[i].albums = [];
+      if (!state.people[i].photos) state.people[i].photos = [];
+    }
+  } else {
+    state = defaultData();
+  }
+  applyTheme();
+  renderSidebar();
+  renderContent();
+  loadFromCloud().then(function(ok) {
+    if (ok) { applyTheme(); renderSidebar(); renderContent(); }
+    else if (!local) { setSyncStatus('error','offline'); }
+    else { setSyncStatus('synced','loaded'); }
+  }).catch(function() { setSyncStatus('error','offline'); });
+}
+
+init();
+</script>
+</body>
+</html>
